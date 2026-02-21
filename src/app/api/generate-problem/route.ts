@@ -2,6 +2,8 @@ import { aiModel, generateObject } from '@/lib/ai';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
     try {
         const { subTopicName, userELO } = await req.json();

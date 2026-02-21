@@ -1,5 +1,9 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
+
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, FileText, Loader2, Lock, XCircle } from 'lucide-react';
@@ -14,6 +18,16 @@ interface QuizData {
         explanation: string;
     }[];
 }
+
+const STATIC_TOPICS = [
+    { id: 't1', name: 'Two Pointers' },
+    { id: 't2', name: 'Sliding Window' },
+    { id: 't3', name: 'Prefix Sum' },
+    { id: 't4', name: 'Binary Search' },
+    { id: 't5', name: 'Monotonic Stack' },
+    { id: 't6', name: 'Dynamic Programming' },
+];
+
 
 export default function TopicGatekeeper() {
     const params = useParams();
@@ -30,9 +44,11 @@ export default function TopicGatekeeper() {
         // Simulated fetch or actual AI generation call
         const fetchQuiz = async () => {
             try {
+                const topicName = STATIC_TOPICS.find(t => t.id === topicId)?.name || 'General DSA';
                 const res = await fetch('/api/generate-quiz', {
                     method: 'POST',
-                    body: JSON.stringify({ subTopicName: 'Sliding Window: Variable Size' })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subTopicName: topicName })
                 });
                 const data = await res.json();
                 setQuizData(data);
@@ -42,6 +58,7 @@ export default function TopicGatekeeper() {
                 setLoading(false);
             }
         };
+
         fetchQuiz();
     }, [topicId]);
 

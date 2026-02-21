@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
+
 import { supabase } from '@/lib/supabase';
 import { calculateNewELO } from '@/utils/elo';
 
@@ -26,20 +28,20 @@ export async function POST(req: NextRequest) {
 
         // 2. FETCH CURRENT RATINGS
         // Fetch user profile
-        const { data: profile, error: profileErr } = await supabase
+        const { data: profile, error: profileErr } = await (supabase
             .from('profiles')
             .select('elo_rating')
             .eq('id', userId)
-            .single();
+            .single() as any);
 
         if (profileErr) throw new Error('User profile not found');
 
         // Fetch problem
-        const { data: problem, error: problemErr } = await supabase
+        const { data: problem, error: problemErr } = await (supabase
             .from('problems')
             .select('difficulty_elo')
             .eq('id', problemId)
-            .single();
+            .single() as any);
 
         if (problemErr) throw new Error('Problem not found');
 
