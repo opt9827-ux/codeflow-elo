@@ -1,0 +1,92 @@
+# Bharat DSA Yatra – Project Conventions
+
+## TypeScript Best Practices
+
+- **Strict mode**: Use strict TypeScript. No `any`—prefer `unknown` and type guards.
+- **Explicit return types**: Add return types to exported functions and React components.
+- **Interfaces over types**: Prefer `interface` for object shapes; use `type` for unions, intersections, and utility types.
+- **Named exports**: Prefer named exports for better tree-shaking and refactoring.
+- **Null safety**: Use optional chaining (`?.`) and nullish coalescing (`??`). Avoid non-null assertion (`!`) unless necessary.
+- **Imports**: Use path aliases when configured. Group: React first, then third-party, then local (components, hooks, services, utils).
+- **Error handling**: Catch specific errors; avoid empty `catch` blocks. Log and rethrow or handle appropriately.
+
+```typescript
+// ✅ GOOD
+interface UserProgress {
+  nodeId: string
+  completedAt: Date
+}
+export function getProgress(userId: string): UserProgress | null {
+  return progressMap.get(userId) ?? null
+}
+
+// ❌ BAD
+export function getProgress(userId: any) {
+  return progressMap.get(userId)
+}
+```
+
+## React Best Practices
+
+- **Functional components**: Use function components only. No class components.
+- **Hooks**: Extract reusable logic into custom hooks in `src/hooks`.
+- **Props**: Define explicit prop interfaces. Use `React.FC` sparingly; prefer explicit return type.
+- **State**: Prefer `useState` for local state; lift state only when needed. Consider `useReducer` for complex state.
+- **Effects**: Specify dependency arrays. Avoid unnecessary effects; use callbacks or derived state when possible.
+- **Keys**: Use stable, unique keys (ids) in lists—never array index for dynamic lists.
+- **Accessibility**: Use semantic HTML. Add `aria-*` where needed. Support keyboard navigation.
+
+```tsx
+// ✅ GOOD
+interface CardProps {
+  title: string
+  difficulty: 'Warmup' | 'Standard' | 'Hardcore'
+}
+export function Card({ title, difficulty }: CardProps): React.ReactElement {
+  return <article>...</article>
+}
+```
+
+## Tailwind Best Practices
+
+- **Utility-first**: Use Tailwind utilities directly. Avoid inline styles unless dynamic.
+- **Design tokens**: Use theme colors (e.g. `saffron-500`, `cyber-teal-500`) from `@theme` in `src/index.css`. Do not hardcode hex in components.
+- **Responsive**: Mobile-first. Use `sm:`, `md:`, `lg:` breakpoints. Test small screens first.
+- **Spacing**: Use scale values: `p-4`, `gap-6`, `space-y-2`. Be consistent.
+- **Dark mode**: Prefer dark backgrounds. Use `text-slate-400`, `border-slate-800`, `bg-slate-950` for hierarchy.
+- **Composition**: Extract repeated patterns into components; avoid long `className` strings. Use `cn()` or `clsx` for conditional classes.
+- **No arbitrary values**: Prefer `rounded-xl` over `rounded-[12px]` unless theme lacks the value.
+- **Performance**: Avoid `@apply` in components for single-use styles; use in `index.css` for base/global only.
+
+```tsx
+// ✅ GOOD – uses theme tokens
+<button className="rounded-lg bg-saffron-500 px-4 py-2 text-slate-950 font-semibold hover:bg-saffron-400">
+  Start
+</button>
+
+// ❌ BAD – hardcoded color
+<button className="rounded-lg bg-[#FF9933]">
+  Start
+</button>
+```
+
+## Project Structure
+
+- `src/components/` – Reusable UI components (AppShell, Card, Button, etc.)
+- `src/hooks/` – Custom React hooks (useLocalStorage, useTheme, etc.)
+- `src/services/` – API clients, external integrations (Gemini, Wandbox, etc.)
+- Colocate tests next to source when appropriate, or in `__tests__` directories.
+
+## File Naming
+
+- **Components**: PascalCase – `AppShell.tsx`, `PlacementCard.tsx`
+- **Hooks**: camelCase with `use` prefix – `useTheme.ts`, `useLocalStorage.ts`
+- **Services**: camelCase – `gemini.ts`, `wandbox.ts`
+- **Utils**: camelCase – `formatDate.ts`, `cn.ts`
+
+## General
+
+- **Formatting**: Use Prettier. 2-space indent. Trailing commas.
+- **Linting**: Fix ESLint issues before committing. No `eslint-disable` without justification.
+- **Comments**: Prefer self-documenting code. Comment "why", not "what".
+- **Imports**: Absolute order—external deps, then internal. No circular dependencies.
