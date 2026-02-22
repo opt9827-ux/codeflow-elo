@@ -1,23 +1,21 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-function requireEnv(name: 'NEXT_PUBLIC_SUPABASE_URL' | 'NEXT_PUBLIC_SUPABASE_ANON_KEY'): string {
-  const value = process.env[name] || process.env[name.replace('NEXT_PUBLIC_', 'VITE_')]
-  if (!value) {
-    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
-      // Log warning during build but don't crash if possible, 
-      // though Supabase init needs these.
-      console.warn(`[supabase] Warning: Missing ${name}.`)
-      return ""
-    }
-    throw new Error(`[supabase] Missing ${name}. Check your .env.local / Vercel env vars.`)
+// Helper to get env vars without crashing the browser
+const getEnv = (name: string): string => {
+  const value = process.env[name] || '';
+  if (!value && typeof window !== 'undefined') {
+    console.warn(`[supabase] Warning: ${name} is not defined in the browser.`);
   }
-  return value
+  return value;
 }
 
-// NextJS Supabase Client
+const supabaseUrl = getEnv('NEXT_PUBLIC_SUPABASE_URL');
+const supabaseAnonKey = getEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+
+// Initialize with fallback strings to avoid "supabaseUrl is required" error
 export const supabase: SupabaseClient = createClient(
-  requireEnv('NEXT_PUBLIC_SUPABASE_URL'),
-  requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key',
   {
     auth: {
       persistSession: true,
