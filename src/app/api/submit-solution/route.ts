@@ -4,6 +4,9 @@ export const dynamic = 'force-dynamic';
 import { supabase } from '@/lib/supabase';
 import { calculateNewELO } from '@/utils/elo';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isValidUUID = (id: string) => UUID_REGEX.test(id);
+
 /**
  * API Route to handle problem submissions.
  * Logic:
@@ -28,19 +31,27 @@ export async function POST(req: NextRequest) {
 
         // 2. FETCH CURRENT RATINGS
         // Fetch user profile
-        // Mapped to profile.elo_rating with null check
-        const { data: profile } = await (supabase
-            .from('profiles')
-            .select('elo_rating')
-            .eq('id', userId)
-            .single() as any);
+        // Mapped to profile.elo_rating with null check and UUID validation
+        let profile = null;
+        if (isValidUUID(userId)) {
+            const { data } = await (supabase
+                .from('profiles')
+                .select('elo_rating')
+                .eq('id', userId)
+                .single() as any);
+            profile = data;
+        }
 
         // Fetch problem
-        const { data: problem } = await (supabase
-            .from('problems')
-            .select('difficulty_elo')
-            .eq('id', problemId)
-            .single() as any);
+        let problem = null;
+        if (isValidUUID(problemId)) {
+            const { data } = await (supabase
+                .from('problems')
+                .select('difficulty_elo')
+                .eq('id', problemId)
+                .single() as any);
+            problem = data;
+        }
 
         // 3. CALCULATE NEW ELO
         const currentUserELO = profile?.elo_rating ?? 1200;
@@ -52,22 +63,20 @@ export async function POST(req: NextRequest) {
             actualScore
         );
 
-        // 4. UPDATE DB
-        // Update User Profile
-        const { error: updateUserErr } = await supabase
-            .from('profiles')
-            .update({ elo_rating: newUserELO })
-            .eq('id', userId);
+        // 4. UPDATE DB (Only if IDs are valid)
+        if (isValidUUID(userId)) {
+            await supabase
+                .from('profiles')
+                .update({ elo_rating: newUserELO })
+                .eq('id', userId);
+        }
 
-        if (updateUserErr) throw updateUserErr;
-
-        // Update Problem Rating
-        const { error: updatePropErr } = await supabase
-            .from('problems')
-            .update({ difficulty_elo: newProblemELO })
-            .eq('id', problemId);
-
-        if (updatePropErr) throw updatePropErr;
+        if (isValidUUID(problemId)) {
+            await supabase
+                .from('problems')
+                .update({ difficulty_elo: newProblemELO })
+                .eq('id', problemId);
+        }
 
         // Optionally log the attempt (reuse attempts table from schema)
         await supabase.from('attempts').insert({
