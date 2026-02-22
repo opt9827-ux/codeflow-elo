@@ -17,16 +17,28 @@ const isValidUUID = (id: string) => UUID_REGEX.test(id);
  */
 export async function POST(req: NextRequest) {
     try {
-        const { userId, problemId, code, topicId } = await req.json();
+        const { userId, problemId, code, language, topicId } = await req.json();
 
         if (!userId || !problemId || !code) {
             return NextResponse.json({ error: 'Missing required data' }, { status: 400 });
         }
 
-        // 1. MOCK EVALUATION 
-        // In a real system, we'd run this in a sandbox. 
-        // For this prototype, we'll assume the code is correct if it's longer than 20 chars.
-        const isCorrect = code.length > 50;
+        // 1. EVALUATION (Simulated Driver-Code Wrapper)
+        // In a real sandbox:
+        // const driverCode = `
+        //   ${code}
+        //   const testCases = ${JSON.stringify(hiddenTestCases)};
+        //   const results = testCases.map(tc => solve(...tc.args) === tc.expected);
+        //   return results.every(r => r === true);
+        // `;
+
+        // Simulation logic: 
+        // We'll check if the code contains the word 'return' and the function name 'solve' (or the class Solution for other languages)
+        const hasSolve = code.toLowerCase().includes('solve') || code.toLowerCase().includes('solution');
+        const hasReturn = code.toLowerCase().includes('return');
+
+        // For the sake of this DSA Overhaul, let's say it passes if it has the core logic
+        const isCorrect = hasSolve && hasReturn && code.length > 60;
         const actualScore = isCorrect ? 1 : 0;
 
         // 2. FETCH CURRENT RATINGS
