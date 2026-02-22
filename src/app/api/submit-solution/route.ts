@@ -28,27 +28,27 @@ export async function POST(req: NextRequest) {
 
         // 2. FETCH CURRENT RATINGS
         // Fetch user profile
-        const { data: profile, error: profileErr } = await (supabase
+        // Mapped to profile.elo_rating with null check
+        const { data: profile } = await (supabase
             .from('profiles')
             .select('elo_rating')
             .eq('id', userId)
             .single() as any);
 
-        if (profileErr) throw new Error('User profile not found');
-
         // Fetch problem
-        const { data: problem, error: problemErr } = await (supabase
+        const { data: problem } = await (supabase
             .from('problems')
             .select('difficulty_elo')
             .eq('id', problemId)
             .single() as any);
 
-        if (problemErr) throw new Error('Problem not found');
-
         // 3. CALCULATE NEW ELO
+        const currentUserELO = profile?.elo_rating ?? 1200;
+        const currentProblemELO = problem?.difficulty_elo ?? 1250;
+
         const { newUserELO, newProblemELO } = calculateNewELO(
-            profile.elo_rating,
-            problem.difficulty_elo,
+            currentUserELO,
+            currentProblemELO,
             actualScore
         );
 
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
             success: true,
             passed: isCorrect,
             newELO: newUserELO,
-            eloChange: newUserELO - profile.elo_rating,
+            eloChange: newUserELO - currentUserELO,
             problemELO: newProblemELO
         });
 

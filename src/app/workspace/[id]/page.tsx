@@ -31,7 +31,7 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function Workspace() {
     const router = useRouter();
     const rawParams = useParams();
-    
+
     // Safely extract the ID
     const topicId = typeof rawParams?.id === 'string' ? rawParams.id : '';
 
@@ -115,18 +115,29 @@ export default function Workspace() {
             });
             const data = await res.json();
 
-            if (data.passed) {
-                setResult({ passed: true, eloChange: data.eloChange, newELO: data.newELO });
-                setOutput(`Success! All test cases passed.\nYour new ELO: ${data.newELO} (+${data.eloChange})`);
+            if (res.ok && data.success && data.passed) {
+                setResult({
+                    passed: true,
+                    eloChange: data.eloChange ?? 0,
+                    newELO: data.newELO ?? 1200
+                });
+                setOutput(`Success! All test cases passed.\nYour new ELO: ${data.newELO ?? 1200} (+${data.eloChange ?? 0})`);
                 confetti({
                     particleCount: 150,
                     spread: 70,
                     origin: { y: 0.6 },
                     colors: ['#00E5FF', '#2a8af6', '#a853ba']
                 });
+            } else if (res.ok && data.success) {
+                setResult({
+                    passed: false,
+                    eloChange: data.eloChange ?? 0,
+                    newELO: data.newELO ?? 1200
+                });
+                setOutput(`Failure. Logic error detected.\nYour new ELO: ${data.newELO ?? 1200} (${data.eloChange ?? 0})`);
             } else {
-                setResult({ passed: false, eloChange: data.eloChange, newELO: data.newELO });
-                setOutput(`Failure. Logic error detected.\nYour new ELO: ${data.newELO} (${data.eloChange})`);
+                setOutput(`Error: ${data.error || 'Submission failed'}`);
+                setResult(null);
             }
         } catch (e) {
             setOutput("Error submitting solution. Check console.");
