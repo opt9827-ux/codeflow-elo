@@ -37,7 +37,7 @@ export default function RootLayout({
                             </Link>
 
                             <div className="flex items-center gap-6">
-                                <Link href="/dashboard" className="text-sm font-medium text-slate-300 hover:text-white transition-colors flex items-center gap-2">
+                                <Link href="/" className="text-sm font-medium text-slate-300 hover:text-white transition-colors flex items-center gap-2">
                                     <Trophy className="w-4 h-4 text-primary" /> Dashboard
                                 </Link>
                                 <div className="flex items-center gap-2 px-3 py-1.5 glass-panel rounded-full text-sm font-medium">
