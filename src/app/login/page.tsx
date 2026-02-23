@@ -8,19 +8,29 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleLogin = async (provider: 'google' | 'github') => {
+    const handleLogin = async (e: React.MouseEvent, provider: 'google' | 'github') => {
+        // 1. Prevent the default '#' behavior
+        e.preventDefault();
+        e.stopPropagation();
+        
         setLoading(true);
         setError(null);
+        
         try {
+            // 2. Log to your browser console to see if it's hitting this line
+            console.log("Starting login for:", provider);
+            
             const { error } = await supabase.auth.signInWithOAuth({
                 provider,
                 options: {
-                    // Force the redirect to the specific callback route
-                    redirectTo: `${window.location.origin}/auth/callback`,
+                    // 3. Use a hardcoded string just to test if origin is the issue
+                    redirectTo: `https://codeflow-elo.vercel.app/auth/callback`,
                 },
             });
+            
             if (error) throw error;
         } catch (err: any) {
+            console.error("Login Error:", err);
             setError(err.message);
             setLoading(false);
         }
@@ -43,7 +53,8 @@ export default function LoginPage() {
 
                 <div className="space-y-4">
                     <button
-                        onClick={() => handleLogin('github')}
+                        type="button" // 4. Explicit type="button" prevents form submission
+                        onClick={(e) => handleLogin(e, 'github')}
                         disabled={loading}
                         className="w-full flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-3 px-4 rounded-xl transition-all border border-slate-700 disabled:opacity-50"
                     >
@@ -52,7 +63,8 @@ export default function LoginPage() {
                     </button>
 
                     <button
-                        onClick={() => handleLogin('google')}
+                        type="button"
+                        onClick={(e) => handleLogin(e, 'google')}
                         disabled={loading}
                         className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-slate-900 font-semibold py-3 px-4 rounded-xl transition-all border border-white disabled:opacity-50"
                     >
