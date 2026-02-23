@@ -1,26 +1,20 @@
-import { createClient } from '@supabase/supabase-js';
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase-server'
 
 export async function GET(request: Request) {
-    const requestUrl = new URL(request.url);
-    const code = requestUrl.searchParams.get('code');
-    const next = requestUrl.searchParams.get('next') ?? '/dashboard';
+  const { searchParams, origin } = new URL(request.url)
+  const code = searchParams.get('code')
+  // if "next" is in param, use it as the redirect address
+  const next = searchParams.get('next') ?? '/dashboard'
 
-    if (code) {
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
-        
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        
-        if (!error) {
-            return NextResponse.redirect(new URL(next, request.url));
-        }
+  if (code) {
+    const supabase = await createClient()
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error) {
+      return NextResponse.redirect(`${origin}${next}`)
     }
+  }
 
-    // Fallback: If no code is present, or exchange failed, 
-    // redirect to dashboard anyway so the client-side 
-    // detectSessionInUrl can try to parse the hash fragment.
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  // Return the user to an error page with instructions if logout/error happens
+  return NextResponse.redirect(`${origin}/login?error=auth-code-error`)
 }
