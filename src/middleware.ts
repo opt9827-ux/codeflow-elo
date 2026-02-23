@@ -17,60 +17,38 @@ export async function middleware(request: NextRequest) {
                     return request.cookies.get(name)?.value;
                 },
                 set(name: string, value: string, options: CookieOptions) {
-                    request.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    });
+                    request.cookies.set({ name, value, ...options });
                     response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
+                        request: { headers: request.headers },
                     });
-                    response.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    });
+                    response.cookies.set({ name, value, ...options });
                 },
                 remove(name: string, options: CookieOptions) {
-                    request.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    });
+                    request.cookies.set({ name, value: '', ...options });
                     response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
+                        request: { headers: request.headers },
                     });
-                    response.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    });
+                    response.cookies.set({ name, value: '', ...options });
                 },
             },
         }
     );
 
-    const { data: { session } } = await supabase.auth.getSession();
+    // Use getUser() instead of getSession() for better security in middleware
+    const { data: { user } } = await supabase.auth.getUser();
 
-    // Protection logic
-    const isProtectedRoute = request.nextUrl.pathname.startsWith('/workspace') ||
-        request.nextUrl.pathname.startsWith('/dashboard') ||
-        request.nextUrl.pathname === '/';
+    const isProtectedRoute = 
+        request.nextUrl.pathname.startsWith('/workspace') ||
+        request.nextUrl.pathname.startsWith('/dashboard');
 
-    if (isProtectedRoute && !session) {
-        const url = request.nextUrl.clone();
-        url.pathname = '/login';
-        return NextResponse.redirect(url);
+    // If trying to access protected page without user, go to login
+    if (isProtectedRoute && !user) {
+        return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    if (request.nextUrl.pathname === '/login' && session) {
-        const url = request.nextUrl.clone();
-        url.pathname = '/dashboard';
-        return NextResponse.redirect(url);
+    // If user is logged in and tries to go to login page, send to dashboard
+    if (request.nextUrl.pathname === '/login' && user) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
     return response;
@@ -79,12 +57,8 @@ export async function middleware(request: NextRequest) {
 export const config = {
     matcher: [
         /*
-         * Match all request paths except for the ones starting with:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * Feel free to modify this pattern to include more paths.
+         * Exclude images, static files, and the auth callback from the middleware
          */
-        '/((?!_next/static|_next/image|favicon.ico|auth|api).*)',
+        '/((?!_next/static|_next/image|favicon.ico|auth/callback|api).*)',
     ],
 };
