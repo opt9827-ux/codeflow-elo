@@ -15,6 +15,7 @@ export default function LoginPage() {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider,
                 options: {
+                    // Force the redirect to the specific callback route
                     redirectTo: `${window.location.origin}/auth/callback`,
                 },
             });
@@ -32,9 +33,6 @@ export default function LoginPage() {
                     <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
                         Welcome to CodeFlow-ELO
                     </h1>
-                    <p className="text-slate-400 mt-2 text-sm">
-                        The elite DSA training platform. Sign in to continue.
-                    </p>
                 </div>
 
                 {error && (
@@ -61,10 +59,6 @@ export default function LoginPage() {
                         <Mail className="w-5 h-5 fill-slate-900" />
                         Continue with Google
                     </button>
-                </div>
-
-                <div className="mt-8 text-center text-xs text-slate-500">
-                    By continuing, you agree to our Terms of Service and Privacy Policy.
                 </div>
             </div>
         </div>
